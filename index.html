@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MonoPaste</title>
+    <style>
+        /* Monochrome Theme Variables */
+        :root {
+            --bg-color: #ffffff;
+            --text-color: #111111;
+            --border-color: #cccccc;
+            --accent-color: #000000;
+            --hover-bg: #f5f5f5;
+            --muted-text: #666666;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-color: #121212;
+                --text-color: #e0e0e0;
+                --border-color: #333333;
+                --accent-color: #ffffff;
+                --hover-bg: #1a1a1a;
+                --muted-text: #888888;
+            }
+        }
+
+        /* Basic Reset & Layout */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            padding: 2rem;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            letter-spacing: -0.05em;
+        }
+
+        /* Toolbar & Buttons */
+        .toolbar {
+            display: flex;
+            gap: 0.75rem;
+            align-items: center;
+        }
+
+        .btn {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+            padding: 0.5rem 1rem;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .btn:hover {
+            background-color: var(--hover-bg);
+            border-color: var(--accent-color);
+        }
+
+        .btn-primary {
+            background-color: var(--accent-color);
+            color: var(--bg-color);
+            border-color: var(--accent-color);
+        }
+
+        .btn-primary:hover {
+            background-color: var(--text-color);
+            opacity: 0.9;
+        }
+
+        /* Hide the default file input styling */
+        input[type="file"] {
+            display: none;
+        }
+
+        /* Main Editor */
+        .editor-container {
+            margin-bottom: 1.5rem;
+        }
+
+        textarea {
+            width: 100%;
+            height: 450px;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+            padding: 1rem;
+            font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+            font-size: 0.95rem;
+            resize: vertical;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        textarea:focus {
+            border-color: var(--accent-color);
+        }
+
+        /* Footer / Status */
+        footer {
+            font-size: 0.8rem;
+            color: var(--muted-text);
+            display: flex;
+            justify-content: space-between;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>mono//paste</h1>
+        <div class="toolbar">
+            <!-- Hidden native file input, triggered by the custom button label -->
+            <label for="file-upload" class="btn">
+                <span>Upload File</span>
+                <input type="file" id="file-upload" accept=".txt,.js,.py,.html,.css,.json,.md" />
+            </label>
+            <button class="btn btn-primary" id="btn-save">Create Paste</button>
+        </div>
+    </header>
+
+    <main>
+        <div class="editor-container">
+            <textarea id="paste-input" placeholder="Paste your text or code here, or upload a file..."></textarea>
+        </div>
+    </main>
+
+    <footer>
+        <span id="char-count">0 characters</span>
+        <span>A clean, minimalist space for text.</span>
+    </footer>
+
+    <script>
+        const pasteInput = document.getElementById('paste-input');
+        const fileUpload = document.getElementById('file-upload');
+        const btnSave = document.getElementById('btn-save');
+        const charCount = document.getElementById('char-count');
+
+        // Handle File Upload/Loading
+        fileUpload.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                pasteInput.value = event.target.result;
+                updateCharCount();
+            };
+            reader.readAsText(file);
+        });
+
+        // Update Character Count
+        function updateCharCount() {
+            const count = pasteInput.value.length;
+            charCount.textContent = `${count.toLocaleString()} character${count === 1 ? '' : 's'}`;
+        }
+
+        pasteInput.addEventListener('input', updateCharCount);
+
+        // Handle Save Action (Frontend Demo)
+        btnSave.addEventListener('click', () => {
+            const content = pasteInput.value.trim();
+            if (!content) {
+                alert('Please enter some text before creating a paste.');
+                return;
+            }
+            
+            // Front-end mock action. 
+            // In a full app, you would fetch() a backend API here to save it to a database.
+            alert('Paste saved! (Connect this button to your backend/database API to generate real shareable URLs).');
+        });
+    </script>
+</body>
+</html>
