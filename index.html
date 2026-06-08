@@ -134,10 +134,9 @@
 <body>
 
     <header>
-        <h1>mono//paste</h1>
+        <h1 id="site-logo">mono//paste</h1>
         <div class="toolbar">
-            <!-- Hidden native file input, triggered by the custom button label -->
-            <label for="file-upload" class="btn">
+            <label for="file-upload" class="btn" id="upload-label">
                 <span>Upload File</span>
                 <input type="file" id="file-upload" accept=".txt,.js,.py,.html,.css,.json,.md" />
             </label>
@@ -161,8 +160,14 @@
         const fileUpload = document.getElementById('file-upload');
         const btnSave = document.getElementById('btn-save');
         const charCount = document.getElementById('char-count');
+        const siteLogo = document.getElementById('site-logo');
+        const uploadLabel = document.getElementById('upload-label');
 
-        // Handle File Upload/Loading
+        // CHANGE THIS URL LATER: Put your actual live backend website link here once deployed.
+        // Leave it as localhost for now if testing locally.
+        const API_URL = 'http://localhost:5000/api/pastes';
+
+        // 1. Handle File Upload/Loading
         fileUpload.addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (!file) return;
@@ -175,25 +180,70 @@
             reader.readAsText(file);
         });
 
-        // Update Character Count
+        // 2. Update Character Count
         function updateCharCount() {
             const count = pasteInput.value.length;
             charCount.textContent = `${count.toLocaleString()} character${count === 1 ? '' : 's'}`;
         }
-
         pasteInput.addEventListener('input', updateCharCount);
 
-        // Handle Save Action (Frontend Demo)
-        btnSave.addEventListener('click', () => {
+        // 3. Handle Saving a Paste to the Database
+        btnSave.addEventListener('click', async () => {
             const content = pasteInput.value.trim();
             if (!content) {
                 alert('Please enter some text before creating a paste.');
                 return;
             }
-            
-            // Front-end mock action. 
-            // In a full app, you would fetch() a backend API here to save it to a database.
-            alert('Paste saved! (Connect this button to your backend/database API to generate real shareable URLs).');
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ content })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    // Generates the shareable URL using your browser link + the new ID
+                    const shareableUrl = `${window.location.origin}${window.location.pathname}?id=${data.shortId}`;
+                    alert(`Paste saved successfully!\n\nShareable Link:\n${shareableUrl}`);
+                    window.location.search = `?id=${data.shortId}`; // Automatically opens the link
+                } else {
+                    alert('Database Error: ' + data.error);
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Could not connect to the backend database. Make sure your server is running!');
+            }
+        });
+
+        // 4. Handle Loading an Existing Shared Paste on Page Load
+        window.addEventListener('DOMContentLoaded', async () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const pasteId = urlParams.get('id');
+
+            if (pasteId) {
+                siteLogo.textContent = `mono//paste [${pasteId}]`;
+                pasteInput.placeholder = "Loading shared paste...";
+                pasteInput.readOnly = true;
+                uploadLabel.style.display = 'none';
+                btnSave.style.display = 'none';
+
+                try {
+                    const response = await fetch(`${API_URL}/${pasteId}`);
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        pasteInput.value = data.content;
+                        updateCharCount();
+                    } else {
+                        pasteInput.value = `Error: ${data.error || 'Failed to load paste.'}`;
+                    }
+                } catch (err) {
+                    pasteInput.value = "Error: Cannot connect to the backend server.";
+                }
+            }
         });
     </script>
 </body>
